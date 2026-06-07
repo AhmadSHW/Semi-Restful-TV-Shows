@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{ show.title }}</title>
+</head>
+<body>
+	<a href="/shows/">Go Back</a>
+	<h1>{{ show.title }}</h1>
+
+	<p><strong>Network</strong>{{ show.network }}</p>
+	<p><strong>Release Date</strong>{{ show.release_date }}</p>
+	<p><strong>Description</strong>{{ show.description }}</p>
+
+	<p><em>Last Updated: {{ show.updated_at }}</em></p>
+	<br><br>
+	<a href="/shows/{{ show.id }}/edit/">Edit</a>
+
+	<form action="/shows/{{ show.id }}/destroy/" method="POST" style="display: inline;">
+		{% csrf_token %}
+		<button type="submit">Delete</button>
+	</form>
+	
+</body>
+</html>
