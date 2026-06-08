@@ -9,20 +9,29 @@
 	<a href="/shows/{{ show.id }}/">Go to Show</a>
 	<h1>Edit Show</h1>
 
+	{% if errors %}
+		<ul style="color: red;">
+			{% for key, message in errors.items %}
+				<li>{{ message }}</li>
+			{% endfor %}
+		</ul>
+	{% endif %}
+
+
 	<form action="/shows/{{ show.id }}/update/" method="POST">
 		{% csrf_token %}
 
 		<label>Title:</label><br>
-		<input type="text" name="title" value="{{ show.title }}"><br><br>
+		<input type="text" name="title" value="{{ data.title|default:show.title }}"><br><br>
 
 		<label>Network</label><br>
-		<input type="text" name="network" value="{{ show.network }}"><br><br>
+		<input type="text" name="network" value="{{ data.network|default:show.network }}"><br><br>
 
 		<label>Release Date</label><br>
-		<input type="date" name="release_date" value="{{ show.release_date|date:'Y-m-d' }}"><br><br>
+		<input type="date" name="release_date" value="{{ data.release_date|default:show.release_date|date:'Y-m-d '}}"><br><br>
 
 		<label>Description</label><br>
-		<textarea name="description">{{ show.description }}</textarea>
+		<textarea name="description">{{ data.description|default:show.description }}</textarea>
 
 		<button type="submit">Update</button>
 	</form>

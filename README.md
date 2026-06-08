@@ -1,55 +1,61 @@
-# 📺 Semi-Restful TV Shows
+# 📺 Semi-Restful TV Shows — With Validation
 
-A Django web application that implements full CRUD functionality for managing TV shows, following RESTful routing conventions.
-
----
-
-## 🎯 Objectives
-
-- Practice ORM queries from the controller
-- Practice RESTful routing
-- Practice rendering query results to templates
-- Practice using form input to create and update database records
+A full-stack Django web application for managing TV shows, built with the **MTV architecture** (Model-Template-View). This project demonstrates full CRUD operations with server-side validation to prevent dirty data from entering the database.
 
 ---
 
-## 🛠️ Tech Stack
+## 🚀 Features
 
-- **Backend:** Python / Django 6.0
-- **Database:** SQLite3
-- **Frontend:** HTML5 / Django Templates
-- **Architecture:** MTV (Model - Template - View)
+- View all TV shows in a table
+- Add a new TV show with a form
+- View a single show's details
+- Edit and update an existing show
+- Delete a show
+- **Server-side validation** on both Create and Update forms
+- Errors displayed on the same page without losing user input
 
 ---
 
-## 📁 Project Structure
+## 🗂️ Project Structure
 
 ```
-tv_project/
-├── tv_project/
-│   ├── settings.py
-│   └── urls.py
-├── shows_app/
-│   ├── templates/
-│   │   └── shows/
-│   │       ├── index.html     ← All shows list
-│   │       ├── new.html       ← Add new show form
-│   │       ├── show.html      ← Single show detail
-│   │       └── edit.html      ← Edit show form
-│   ├── models.py
-│   ├── views.py
-│   └── urls.py
+tv_project_valid/
+├── tv_project/          # Main Django project (settings, urls)
+├── shows_app/           # The app
+│   ├── models.py        # Show model
+│   ├── views.py         # All logic + validations
+│   ├── urls.py          # URL routes
+│   └── templates/
+│       └── shows/
+│           ├── index.html   # All shows
+│           ├── new.html     # Add show form
+│           ├── show.html    # Show detail
+│           └── edit.html    # Edit show form
 └── manage.py
 ```
 
 ---
 
-## 🗃️ Model
+## 🔗 Routes (Semi-RESTful)
+
+| Method | URL                        | Action         |
+|--------|----------------------------|----------------|
+| GET    | `/shows/`                  | All shows      |
+| GET    | `/shows/new/`              | Add show form  |
+| POST   | `/shows/create/`           | Save new show  |
+| GET    | `/shows/<id>/`             | Show detail    |
+| GET    | `/shows/<id>/edit/`        | Edit show form |
+| POST   | `/shows/<id>/update/`      | Save changes   |
+| POST   | `/shows/<id>/destroy/`     | Delete show    |
+
+---
+
+## 🧱 Model — `Show`
 
 ```python
 class Show(models.Model):
-    title        = models.CharField(max_length=200)
-    network      = models.CharField(max_length=100)
+    title        = models.CharField(max_length=255)
+    network      = models.CharField(max_length=255)
     release_date = models.DateField()
     description  = models.TextField()
     updated_at   = models.DateTimeField(auto_now=True)
@@ -57,76 +63,74 @@ class Show(models.Model):
 
 ---
 
-## 🔀 RESTful Routes
+## ✅ Validation Rules
 
-| Method | Route | Action | Description |
-|--------|-------|--------|-------------|
-| GET | `/shows/` | `all_shows` | Display all TV shows in a table |
-| GET | `/shows/new/` | `new_show` | Show form to add a new show |
-| POST | `/shows/create/` | `create_show` | Save new show, redirect to `/shows/<id>/` |
-| GET | `/shows/<id>/` | `show_detail` | Display one show's details |
-| GET | `/shows/<id>/edit/` | `edit_show` | Show form pre-filled with show data |
-| POST | `/shows/<id>/update/` | `update_show` | Update show, redirect to `/shows/<id>/` |
-| POST | `/shows/<id>/destroy/` | `destroy_show` | Delete show, redirect to `/shows/` |
+Validation runs in the view **before** saving to the database:
 
-> ⚠️ `shows/new/` and `shows/create/` must be defined **before** `shows/<int:show_id>/` in `urls.py` — Django reads URLs top-to-bottom.
+| Field         | Rule                              |
+|---------------|-----------------------------------|
+| Title         | Required, at least 2 characters   |
+| Network       | Required                          |
+| Release Date  | Required                          |
+| Description   | Required, at least 10 characters  |
+
+### How it works
+
+1. User submits the form (POST request)
+2. View collects all field values from `request.POST`
+3. Each field is checked — if invalid, an error message is added to an `errors` dictionary
+4. If `errors` is not empty → re-render the form with errors displayed in red, and user's input preserved
+5. If `errors` is empty → save to DB and redirect
+
+```python
+errors = {}
+
+if len(title) < 2:
+    errors['title'] = 'Title must be at least 2 characters.'
+
+if errors:
+    return render(request, 'shows/new.html', {
+        'errors': errors,
+        'data': request.POST   # keeps the user's input in the form
+    })
+
+# No errors — safe to save
+Show.objects.create(...)
+```
 
 ---
 
-## ⚙️ Setup & Installation
+## 🖥️ How to Run
 
 ```bash
-# 1. Clone or create the project
-django-admin startproject tv_project
-cd tv_project
-python manage.py startapp shows_app
+# 1. Activate virtual environment
+source venv/bin/activate        # Mac/Linux
+venv\Scripts\activate           # Windows
 
-# 2. Add 'shows_app' to INSTALLED_APPS in settings.py
+# 2. Install dependencies
+pip install django
 
 # 3. Run migrations
-python manage.py makemigrations
 python manage.py migrate
 
 # 4. Start the server
 python manage.py runserver
+
+# 5. Open in browser
+http://localhost:8000/
 ```
 
-Then open your browser at: `http://127.0.0.1:8000/`
-
-The root `/` automatically redirects to `/shows/`.
-
 ---
 
-## 💡 Key Concepts
+## 🛠️ Built With
 
-### Why POST for Delete and Update?
-HTML `<a href>` tags always send **GET** requests. Since delete and update modify data, they must use **POST** via a `<form>` tag.
-
-### Why `{% csrf_token %}`?
-Django's built-in security. Every POST form requires this token or Django will reject the request with a 403 error.
-
-### Why `|date:'Y-m-d'` filter?
-The `<input type="date">` HTML element requires the format `YYYY-MM-DD`. Without this filter, the date field renders blank in the edit form.
-
-### Why `auto_now=True` on `updated_at`?
-Every time `.save()` is called on a model instance, Django automatically updates this field to the current timestamp — no manual update needed.
-
----
-
-## 🧪 Testing the App
-
-| Step | URL | Expected Result |
-|------|-----|-----------------|
-| 1 | `localhost:8000/` | Redirects to `/shows/` |
-| 2 | `localhost:8000/shows/` | Shows table with all records |
-| 3 | `localhost:8000/shows/new/` | Empty form to add a show |
-| 4 | Submit form | Redirects to new show's detail page |
-| 5 | Click Edit | Form pre-filled with current data |
-| 6 | Submit update | Redirects back to show detail |
-| 7 | Click Delete | Show removed, back to `/shows/` |
+- Python 3.13
+- Django 6.x
+- SQLite (default Django DB)
+- HTML / CSS (minimal, no frameworks)
 
 ---
 
 ## 👨‍💻 Author
 
-Built as part of the **AXSOS Academy** Full Stack Development Program.
+**Ahmad Shweiki** — Full Stack Development Student @ AXSOS Academy

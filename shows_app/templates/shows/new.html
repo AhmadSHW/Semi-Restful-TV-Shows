@@ -9,19 +9,28 @@
 	<a href="/shows/">Go Back</a>
 	<h1>Add a New Show</h1>
 
+	{% if errors %}
+		<ul style="color: red;">
+				{% for key, message in errors.items %}
+					<li>{{ message }}</li>
+				{% endfor %}
+		</ul>
+	{% endif %}
+
+
 	<form action="/shows/create/" method="POST">
 		{% csrf_token %}
 		<label>Title</label><br>
-		<input type="text" name="title"><br><br>
+		<input type="text" name="title" value="{{ data.title }}"><br><br>
 
 		<label>Network</label><br>
-		<input type="text" name="network"><br><br>
+		<input type="text" name="network" value="{{ data.network }}"><br><br>
 
 		<label>Release Date</label><br>
-		<input type="date" name="release_date"><br><br>
+		<input type="date" name="release_date" value="{{ data.release_date }}"><br><br>
 
 		<label>Description:</label><br><br>
-		<textarea name="description"></textarea><br><br>
+		<textarea name="description">{{ data.description }}</textarea><br><br>
 
 		<button type="submit">Create</button>
 
